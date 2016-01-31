@@ -22,3 +22,5 @@ http://localhost:6767/api/EmployeeInfoAPI/
 ### 追加
 http://localhost:6767/api/EmployeeInfoAPI/add/
 
+## 起動
+cargo run
