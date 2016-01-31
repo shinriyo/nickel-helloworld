@@ -24,18 +24,19 @@
             </div>
         </div>
     </div>
-     
+
 </body>
 
+<script type="text/javascript" src="app/assets/angular.js")"></script>
+<script type="text/javascript" src="app/assets/angular-route.min.js")"></script>
 
 @section scripts{
-  <script type="text/javascript" src="@Url.Content("~/Scripts/angular.js")"></script>   
-  <script type="text/javascript" src="@Url.Content("~/Scripts/angular-route.min.js")"></script>   
+  <script type="text/javascript" src="@Url.Content("~/Scripts/angular.js")"></script>
+  <script type="text/javascript" src="@Url.Content("~/Scripts/angular-route.min.js")"></script>
   <script type="text/javascript" src="@Url.Content("~/MyScripts/Module.js")"></script>
 <script src="~/MyScripts/Services.js"></script>
-  <script type="text/javascript" src="@Url.Content("~/MyScripts/ShowEmployeesController.js")"></script> 
-  <script type="text/javascript" src="@Url.Content("~/MyScripts/AddEmpController.js")"></script> 
-    <script type="text/javascript" src="@Url.Content("~/MyScripts/EditEmployeeController.js")"></script> 
-    <script type="text/javascript" src="@Url.Content("~/MyScripts/DeleteEmployeeController.js")"></script>   
+  <script type="text/javascript" src="@Url.Content("~/MyScripts/ShowEmployeesController.js")"></script>
+  <script type="text/javascript" src="@Url.Content("~/MyScripts/AddEmpController.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/MyScripts/EditEmployeeController.js")"></script>
+    <script type="text/javascript" src="@Url.Content("~/MyScripts/DeleteEmployeeController.js")"></script>
  }
-

@@ -3,7 +3,8 @@
 extern crate postgres;
 extern crate openssl;
 extern crate nickel_postgres;
-use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType};
+use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
+    StaticFilesHandler};
 use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
 
@@ -40,7 +41,14 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
     };
 }
 
-// API系
+// INDEX
+fn index<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
+    let mut data = HashMap::new();
+    data.insert("name", "user");
+    return res.render("app/employee/views/index.tpl", &data);
+}
+
+// 基本ページ
 // 追加
 fn add_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
     let mut data = HashMap::new();
@@ -85,14 +93,29 @@ fn show_employees<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<
     return res.render("app/employee/views/show_employees.tpl", &data);
 }
 
+// API系
+
+
+
 fn main() {
     let mut server = Nickel::new();
+
+    // 静的ファイル
+    // http://nickel.rs/
+    server.utilize(StaticFilesHandler::new("app/assets/"));
+    // => 実際のアクセスは「http://localhost:6767/angular.js」
+
+    // URLのセット
     let mut router = Nickel::router();
     router.get("/setup/", setup_table);
-    router.get("/api/EmployeeInfoAPI/add/", add_employee);
+    // 普通のページ
+    router.get("/api/EmployeeInfoAPI/showemployees", show_employees);
+    router.get("/api/EmployeeInfoAPI/addemployee", add_employee);
     router.get("/api/EmployeeInfoAPI/delete/", delete_employee);
     router.get("/api/EmployeeInfoAPI/edit/", edit_employee);
-    router.get("/api/EmployeeInfoAPI/", show_employees);
+    router.get("/api/EmployeeInfoAPI/", index);
+    // API
+
 
     server.utilize(router);
     server.listen("localhost:6767");
