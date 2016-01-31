@@ -12,6 +12,13 @@ http://www.dotnetcurry.com/aspnet/1054/single-page-spa-crud-application-aspnet-m
 # API URL
 ## データベースの設定アクセスすると出来る
 http://localhost:6767/setup/
+※最後に`/`忘れずに
 
 ## CRUD
+
+### 一覧
+http://localhost:6767/api/EmployeeInfoAPI/
+
+### 追加
+http://localhost:6767/api/EmployeeInfoAPI/add/
 
