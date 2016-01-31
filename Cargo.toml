@@ -1,0 +1,15 @@
+[package]
+name = "nickel-helloworld"
+version = "0.1.0"
+authors = ["shinriyo"]
+
+[dependencies]
+nickel = "*"
+r2d2 = "*"
+#postgres = "*"
+postgres = "0.11"
+openssl = "*"
+r2d2_postgres = "*"
+
+[dependencies.nickel_postgres]
+git = "https://github.com/nickel-org/nickel-postgres.git"
