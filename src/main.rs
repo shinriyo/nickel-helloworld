@@ -40,7 +40,29 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
     };
 }
 
-// 見せる
+// API系
+// 追加
+fn add_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
+    let mut data = HashMap::new();
+    data.insert("name", "user");
+    return res.render("app/employee/views/add_employee.tpl", &data);
+}
+
+// 削除
+fn delete_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
+    let mut data = HashMap::new();
+    data.insert("name", "user");
+    return res.render("app/employee/views/delete_employee.tpl", &data);
+}
+
+// 編集
+fn edit_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
+    let mut data = HashMap::new();
+    data.insert("name", "user");
+    return res.render("app/employee/views/edit_employee.tpl", &data);
+}
+
+// 一覧
 fn show_employees<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
     let mut data = HashMap::new();
@@ -67,7 +89,11 @@ fn main() {
     let mut server = Nickel::new();
     let mut router = Nickel::router();
     router.get("/setup/", setup_table);
+    router.get("/api/EmployeeInfoAPI/add/", add_employee);
+    router.get("/api/EmployeeInfoAPI/delete/", delete_employee);
+    router.get("/api/EmployeeInfoAPI/edit/", edit_employee);
     router.get("/api/EmployeeInfoAPI/", show_employees);
+
     server.utilize(router);
     server.listen("localhost:6767");
 }
