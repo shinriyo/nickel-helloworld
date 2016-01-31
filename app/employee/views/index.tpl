@@ -1,42 +1,41 @@
-﻿
-@{
-    ViewBag.Title = "Index";
-    Layout = "~/Views/Shared/_Layout.cshtml";
-}
-
-
-<h2>Index</h2>
-<link href="~/Content/bootstrap.min.css" rel="stylesheet" />
-
-<body ng-app="ApplicationModule">
-    <div>
-        <div>
-            <div>
-                <table>
-                    <tr>
-                        <td><a href="showemployees"> Show Employees </a></td>
-                        <td><a href="addemployee"> Add Employee </a></td>
-                    </tr>
-                </table>
+﻿<!DOCTYPE html>
+<html data-ng-app="movieApp">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <base href="/"/>
+    <title>The Movie App</title>
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/app.css"/>
+</head>
+<body>
+    <nav class="navbar navbar-default" role="navigation">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <a class="navbar-brand" ui-sref="movies">The Movie App</a>
             </div>
-            <div>
-                <div ng-view></div>
+            <div class="collapse navbar-collapse">
+                <ul class="nav navbar-nav">
+                    <li class="active"><a ui-sref="movies">Home</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row top-buffer">
+            <div class="col-xs-8 col-xs-offset-2">
+                <div ui-view></div>
             </div>
         </div>
     </div>
-
+    <script type="text/javascript" src="lib/angular.min.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
+    <script type="text/javascript" src="js/controllers.js"></script>
+    <script type="text/javascript" src="js/services.js"></script>
+    <script type="text/javascript" src="js/directives.js"></script>
+    <script type="text/javascript" src="js/filters.js"></script>
+    <script type="text/javascript" src="lib/angular-ui-router.min.js"></script>
+    <script type="text/javascript" src="lib/angular-resource.min.js"></script>
 </body>
-
-<script type="text/javascript" src="app/assets/angular.js")"></script>
-<script type="text/javascript" src="app/assets/angular-route.min.js")"></script>
-
-@section scripts{
-  <script type="text/javascript" src="@Url.Content("~/Scripts/angular.js")"></script>
-  <script type="text/javascript" src="@Url.Content("~/Scripts/angular-route.min.js")"></script>
-  <script type="text/javascript" src="@Url.Content("~/MyScripts/Module.js")"></script>
-<script src="~/MyScripts/Services.js"></script>
-  <script type="text/javascript" src="@Url.Content("~/MyScripts/ShowEmployeesController.js")"></script>
-  <script type="text/javascript" src="@Url.Content("~/MyScripts/AddEmpController.js")"></script>
-    <script type="text/javascript" src="@Url.Content("~/MyScripts/EditEmployeeController.js")"></script>
-    <script type="text/javascript" src="@Url.Content("~/MyScripts/DeleteEmployeeController.js")"></script>
- }
+</html>
