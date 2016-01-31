@@ -107,15 +107,22 @@ fn main() {
 
     // URLのセット
     let mut router = Nickel::router();
-    router.get("/setup/", setup_table);
-    // 普通のページ
-    router.get("/api/EmployeeInfoAPI/showemployees", show_employees);
-    router.get("/api/EmployeeInfoAPI/addemployee", add_employee);
-    router.get("/api/EmployeeInfoAPI/delete/", delete_employee);
-    router.get("/api/EmployeeInfoAPI/edit/", edit_employee);
-    router.get("/api/EmployeeInfoAPI/", index);
-    // API
 
+    // 普通のページ
+    router.get("/EmployeeInfoAPI/showemployees", show_employees);
+    router.get("/EmployeeInfoAPI/addemployee", add_employee);
+    router.get("/EmployeeInfoAPI/delete/", delete_employee);
+    router.get("/EmployeeInfoAPI/edit/", edit_employee);
+    router.get("/EmployeeInfoAPI/", index);
+
+    // テーブル準備
+//    router.get("/setup/entries", setup_table);
+    // API
+//    router.get("/api/entries", xx);
+//    router.post("/api/entries", xx);
+//    router.get("/api/entries/id", xx);
+//    router.put("/api/entries/id", xx);
+//    router.delete("/api/entries/id", xx);
 
     server.utilize(router);
     server.listen("localhost:6767");
