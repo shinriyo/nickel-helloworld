@@ -19,13 +19,6 @@ struct Movie {
     releaseYear: i32,
     genre: String,
 }
-//struct EmployeeInfo {
-//    EmpNo: i32,
-//    EmpName: String,
-//    Salary: i32,
-//    DeptName: String,
-//    Designation: String,
-//}
 
 // テーブルのセットアップ
 fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
@@ -38,14 +31,6 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
         releaseYear DECIMAL (4)  NOT NULL,
         genre       VARCHAR (50) NOT NULL
     )",
-    // also print to stdout
-//    return match conn.execute("CREATE TABLE EmployeeInfo (
-//        EmpNo       SERIAL PRIMARY KEY,
-//        EmpName     VARCHAR (50) NOT NULL,
-//        Salary      DECIMAL (18) NOT NULL,
-//        DeptName    VARCHAR (50) NOT NULL,
-//        Designation VARCHAR (50) NOT NULL
-//    )",
     &[]) {
         // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
         Ok(n) => return res.send("Movie table was created."),
