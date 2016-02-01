@@ -50,15 +50,35 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
         // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
         Ok(n) => return res.send("Movie table was created."),
         // エラー
-        // Err(err) => return res.send(println!("Error running query: {:?}", err))
         Err(err) => return res.send(format!("Error running query: {:?}", err))
     };
 }
 
 // INDEX
 fn index<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
-    let mut data = HashMap::new();
-    data.insert("name", "user");
+    let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+    let mut data = HashMap::<&str, String>::new();
+//    let mut data = HashMap::<&str, Vec>::new();
+//    let rows: Vec<HashM§ap> = Vec::new();
+    for row in &conn.query("SELECT id, title, genre, releaseYear, director
+        FROM Movie", &[]).unwrap() {
+        let movie = Movie {
+            id: row.get(0),
+            title: row.get(1),
+            genre: row.get(2),
+            releaseYear: row.get(3),
+            director: row.get(4),
+        };
+
+        let mut row_data = HashMap::<&str, String>::new();
+        row_data.insert("id", movie.id.to_string());
+        row_data.insert("title", movie.title.to_string());
+        row_data.insert("genre", movie.genre.to_string());
+        row_data.insert("director", movie.director);
+        row_data.insert("releaseYear", movie.releaseYear.to_string());
+//        rows.push(row_data);
+    }
+//    data.insert("movies", rows);
     return res.render("app/movie/views/index.tpl", &data);
 }
 
@@ -89,35 +109,7 @@ fn show_employees<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
     let mut data = HashMap::new();
     data.insert("name", "user");
-    for row in &conn.query("SELECT EmpNo, EmpName, Salary, DeptName,
-        Designation FROM Movie", &[]).unwrap() {
-//        let movie = Movie {
-//            id: row.get(0),
-//`director`, `genre`, `title`, `releaseYear`
-//        };
 
-//        data.insert("EmpNo", employeeInfo.EmpNo.to_string());
-//        data.insert("EmpName", employeeInfo.EmpName.to_string());
-//        data.insert("Salary", employeeInfo.Salary.to_string());
-//        data.insert("DeptName", employeeInfo.DeptName.to_string());
-//        data.insert("Designation", employeeInfo.Designation.to_string());
-    }
-//    for row in &conn.query("SELECT EmpNo, EmpName, Salary, DeptName,
-//        Designation FROM EmployeeInfo", &[]).unwrap() {
-//        let employeeInfo = EmployeeInfo {
-//            EmpNo: row.get(0),
-//            EmpName: row.get(1),
-//            Salary: row.get(2),
-//            DeptName: row.get(3),
-//            Designation: row.get(4)
-//        };
-//
-//        data.insert("EmpNo", employeeInfo.EmpNo.to_string());
-//        data.insert("EmpName", employeeInfo.EmpName.to_string());
-//        data.insert("Salary", employeeInfo.Salary.to_string());
-//        data.insert("DeptName", employeeInfo.DeptName.to_string());
-//        data.insert("Designation", employeeInfo.Designation.to_string());
-//    }
     return res.render("app/employee/views/show_employees.tpl", &data);
 }
 
@@ -139,7 +131,7 @@ fn main() {
     // テーブル準備
     router.get("/setup/movies", setup_table);
     // 普通のページ
-    router.get("/", index);
+    router.get("/movieApp", index);
 
     // API
     router.get("/api/movies", middleware! { |request, response|
