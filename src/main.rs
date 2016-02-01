@@ -142,11 +142,25 @@ fn main() {
     router.get("/", index);
 
     // API
-//    router.get("/api/movies", xx);
-//    router.post("/api/movies", xx);
-//    router.get("/api/movies/id", xx);
-//    router.put("/api/movies/id", xx);
-//    router.delete("/api/movies/id", xx);
+    router.get("/api/movies", middleware! { |request, response|
+        format!("Hello from GET /api/movies")
+    });
+
+    router.post("/api/movies", middleware! { |request, response|
+        format!("Hello from POST /api/movie")
+    });
+
+    router.get("/api/movies/:id", middleware! { |request, response|
+        format!("Hello from GET /api/movie/:id")
+    });
+
+    router.put("/api/movies/:id", middleware! { |request, response|
+    format!("Hello from PUT /api/movie/:id")
+    });
+
+    router.delete("/api/movies/:id", middleware! { |request, response|
+        format!("Hello from DELETE /api/movie/:id")
+    });
 
     server.utilize(router);
     server.listen("localhost:6767");

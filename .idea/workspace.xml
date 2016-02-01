@@ -7,18 +7,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="9a18cf3e-3fac-461b-b81f-527270eff787" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/static/js/AddEmpController.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/static/js/DeleteEmployeeController.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/static/js/EditEmployeeController.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/static/js/Module.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/static/js/Services.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/static/js/ShowEmployeesController.js" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/views/add_employee.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/views/delete_employee.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/views/edit_employee.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/views/index.tpl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/app/employee/views/show_employees.tpl" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/app/assets/js/controllers.js" afterPath="$PROJECT_DIR$/app/assets/js/controllers.js" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/main.rs" afterPath="$PROJECT_DIR$/src/main.rs" />
     </list>
     <ignored path="nickel-helloworld.iws" />
@@ -40,21 +28,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="counter.sql" pinned="false" current-in-tab="true">
+      <file leaf-file-name="counter.sql" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/counter.sql">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.140625">
+            <state vertical-scroll-proportion="0.0">
               <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="main.rs" pinned="false" current-in-tab="false">
+      <file leaf-file-name="main.rs" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main.rs">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="139" column="17" selection-start-line="139" selection-start-column="17" selection-end-line="139" selection-end-column="17" />
+            <state vertical-scroll-proportion="0.85318106">
+              <caret line="166" column="0" selection-start-line="166" selection-start-column="0" selection-end-line="166" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -63,8 +51,8 @@
       <file leaf-file-name="controllers.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/assets/js/controllers.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-19.444445">
-              <caret line="35" column="3" selection-start-line="35" selection-start-column="3" selection-end-line="35" selection-end-column="3" />
+            <state vertical-scroll-proportion="-13.333333">
+              <caret line="24" column="93" selection-start-line="24" selection-start-column="93" selection-end-line="24" selection-end-column="93" />
               <folding />
             </state>
           </provider>
@@ -142,8 +130,8 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="51" />
-    <option name="y" value="34" />
+    <option name="x" value="167" />
+    <option name="y" value="135" />
     <option name="width" value="1225" />
     <option name="height" value="737" />
   </component>
@@ -574,7 +562,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="51" y="34" width="1225" height="737" extended-state="0" />
+    <frame x="167" y="135" width="1225" height="737" extended-state="0" />
     <editor active="true" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -691,10 +679,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/app/assets/js/directives.js">
+    <entry file="file://$PROJECT_DIR$/counter.sql">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="3" column="0" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+          <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
           <folding />
         </state>
       </provider>
@@ -707,26 +695,26 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main.rs">
+    <entry file="file://$PROJECT_DIR$/app/assets/js/directives.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="139" column="17" selection-start-line="139" selection-start-column="17" selection-end-line="139" selection-end-column="17" />
+          <caret line="3" column="0" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/app/assets/js/controllers.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-19.444445">
-          <caret line="35" column="3" selection-start-line="35" selection-start-column="3" selection-end-line="35" selection-end-column="3" />
+        <state vertical-scroll-proportion="-13.333333">
+          <caret line="24" column="93" selection-start-line="24" selection-start-column="93" selection-end-line="24" selection-end-column="93" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/counter.sql">
+    <entry file="file://$PROJECT_DIR$/src/main.rs">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.140625">
-          <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
+        <state vertical-scroll-proportion="0.85318106">
+          <caret line="166" column="0" selection-start-line="166" selection-start-column="0" selection-end-line="166" selection-end-column="0" />
           <folding />
         </state>
       </provider>
