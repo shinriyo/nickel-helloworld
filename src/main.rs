@@ -31,8 +31,8 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
     return match conn.execute("CREATE TABLE Movie (
         id          SERIAL PRIMARY KEY,
         title       VARCHAR (50) NOT NULL,
-        director    DECIMAL (18) NOT NULL,
         releaseYear DECIMAL (4)  NOT NULL,
+        director    VARCHAR (18) NOT NULL,
         genre       VARCHAR (50) NOT NULL
     )",
     &[]) {
@@ -64,19 +64,20 @@ fn main() {
     // テーブル準備
     router.get("/setup/movies", setup_table);
     // 普通のページ
-    router.get("/movieApp", index);
+    router.get("/", index);
+    //router.get("/movieApp", index);
 
     // API
     router.get("/api/movies", middleware! { |request, response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("select title, genre, director, releaseYear from movie") {
-        Ok(stmt) => stmt,
-        Err(e) => {
-            return response.send(format!("Preparing query failed: {}", e));
-        }
-    };
-    stmt.execute(&[]).ok().expect("Selecting movie failed");
-    let mut my_son =
+        let stmt = match conn.prepare("select title, releaseYear, director, genre from movie") {
+            Ok(stmt) => stmt,
+            Err(e) => {
+                return response.send(format!("Preparing query failed: {}", e));
+            }
+        };
+        stmt.execute(&[]).ok().expect("Selecting movie failed");
+        let mut my_son =
         r#"{
             "movies": [
                 { "title": "アイアンマン"},
@@ -84,30 +85,33 @@ fn main() {
                 { "title": "パディントン"}
             ]
         }"#;
-        let jsond = Json::from_str(my_son);
-        format!("{}", jsond.unwrap())
+        let json = Json::from_str(my_son);
+        format!("{}", json.unwrap())
     });
 
     router.post("/api/movies", middleware! { |request, response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("insert into movie (title, genre, director, releaseYear)
+        let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
             values ($1, $2, $3, $4)") {
             Ok(stmt) => stmt,
             Err(e) => {
                 return response.send(format!("Preparing query failed: {}", e));
             }
         };
+        // test
+        println!("{}", request.param("title").unwrap());
+
         stmt.execute(&[
             &request.param("title"),
-            &request.param("genre"),
+            &request.param("releaseYear"),
             &request.param("director"),
-            &request.param("releaseYear")
+            &request.param("genre")
         ]).ok().expect("Inserting movie failed");
     });
 
     router.get("/api/movies/:id", middleware! { |request, response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("select title, genre, director, releaseYear from movie
+        let stmt = match conn.prepare("select title, releaseYear, director, genre from movie
             from where id = $1") {
             Ok(stmt) => stmt,
             Err(e) => {
@@ -122,8 +126,8 @@ fn main() {
     // update
     router.put("/api/movies/:id", middleware! { |request, response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("uptede movie set title=$1, genre=$2, director=$3,
-            releaseYear=$4)
+        let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
+            director=$3, genre=$4)
             where id = $5") {
             Ok(stmt) => stmt,
             Err(e) => {
@@ -132,9 +136,9 @@ fn main() {
         };
         stmt.execute(&[
             &request.param("title"),
-            &request.param("genre"),
-            &request.param("director"),
             &request.param("releaseYear"),
+            &request.param("director"),
+            &request.param("genre"),
             &request.param("id")
         ]).ok().expect("Updating movie failed");
     });
