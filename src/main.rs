@@ -11,6 +11,10 @@ use postgres::{Connection, SslMode};
 // テンプレのハッシュに使う
 use std::collections::HashMap;
 
+// json
+extern crate rustc_serialize;
+use rustc_serialize::json::{Json, Parser};
+
 // モデル
 struct Movie {
     id: i32,
@@ -43,64 +47,8 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
 fn index<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
     let mut data = HashMap::<&str, String>::new();
-//    let mut data = HashMap::<&str, Vec>::new();
-//    let rows: Vec<HashM§ap> = Vec::new();
-    for row in &conn.query("SELECT id, title, genre, releaseYear, director
-        FROM Movie", &[]).unwrap() {
-        let movie = Movie {
-            id: row.get(0),
-            title: row.get(1),
-            genre: row.get(2),
-            releaseYear: row.get(3),
-            director: row.get(4),
-        };
-
-        let mut row_data = HashMap::<&str, String>::new();
-        row_data.insert("id", movie.id.to_string());
-        row_data.insert("title", movie.title.to_string());
-        row_data.insert("genre", movie.genre.to_string());
-        row_data.insert("director", movie.director);
-        row_data.insert("releaseYear", movie.releaseYear.to_string());
-//        rows.push(row_data);
-    }
-//    data.insert("movies", rows);
     return res.render("app/movie/views/index.tpl", &data);
 }
-
-// 基本ページ
-// 追加
-fn add_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
-    let mut data = HashMap::new();
-    data.insert("name", "user");
-    return res.render("app/employee/views/add_employee.tpl", &data);
-}
-
-// 削除
-fn delete_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
-    let mut data = HashMap::new();
-    data.insert("name", "user");
-    return res.render("app/employee/views/delete_employee.tpl", &data);
-}
-
-// 編集
-fn edit_employee<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
-    let mut data = HashMap::new();
-    data.insert("name", "user");
-    return res.render("app/employee/views/edit_employee.tpl", &data);
-}
-
-// 一覧
-fn show_employees<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
-    let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-    let mut data = HashMap::new();
-    data.insert("name", "user");
-
-    return res.render("app/employee/views/show_employees.tpl", &data);
-}
-
-// API系
-
-
 
 fn main() {
     let mut server = Nickel::new();
@@ -120,23 +68,88 @@ fn main() {
 
     // API
     router.get("/api/movies", middleware! { |request, response|
-        format!("Hello from GET /api/movies")
+        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        let stmt = match conn.prepare("select title, genre, director, releaseYear from movie") {
+        Ok(stmt) => stmt,
+        Err(e) => {
+            return response.send(format!("Preparing query failed: {}", e));
+        }
+    };
+    stmt.execute(&[]).ok().expect("Selecting movie failed");
+    let mut my_son =
+        r#"{
+            "movies": [
+                { "title": "アイアンマン"},
+                { "title": "アベンジャーズ"},
+                { "title": "パディントン"}
+            ]
+        }"#;
+        let jsond = Json::from_str(my_son);
+        format!("{}", jsond.unwrap())
     });
 
     router.post("/api/movies", middleware! { |request, response|
-        format!("Hello from POST /api/movie")
+        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        let stmt = match conn.prepare("insert into movie (title, genre, director, releaseYear)
+            values ($1, $2, $3, $4)") {
+            Ok(stmt) => stmt,
+            Err(e) => {
+                return response.send(format!("Preparing query failed: {}", e));
+            }
+        };
+        stmt.execute(&[
+            &request.param("title"),
+            &request.param("genre"),
+            &request.param("director"),
+            &request.param("releaseYear")
+        ]).ok().expect("Inserting movie failed");
     });
 
     router.get("/api/movies/:id", middleware! { |request, response|
-        format!("Hello from GET /api/movie/:id")
+        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        let stmt = match conn.prepare("select title, genre, director, releaseYear from movie
+            from where id = $1") {
+            Ok(stmt) => stmt,
+            Err(e) => {
+                return response.send(format!("Preparing query failed: {}", e));
+            }
+        };
+        stmt.execute(&[
+            &request.param("id")
+        ]).ok().expect("Selecting movie failed");
     });
 
+    // update
     router.put("/api/movies/:id", middleware! { |request, response|
-    format!("Hello from PUT /api/movie/:id")
+        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        let stmt = match conn.prepare("uptede movie set title=$1, genre=$2, director=$3,
+            releaseYear=$4)
+            where id = $5") {
+            Ok(stmt) => stmt,
+            Err(e) => {
+                return response.send(format!("Preparing query failed: {}", e));
+            }
+        };
+        stmt.execute(&[
+            &request.param("title"),
+            &request.param("genre"),
+            &request.param("director"),
+            &request.param("releaseYear"),
+            &request.param("id")
+        ]).ok().expect("Updating movie failed");
     });
 
     router.delete("/api/movies/:id", middleware! { |request, response|
-        format!("Hello from DELETE /api/movie/:id")
+        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        let stmt = match conn.prepare("delete movie where id = $1") {
+            Ok(stmt) => stmt,
+            Err(e) => {
+                return response.send(format!("Preparing query failed: {}", e));
+            }
+        };
+        stmt.execute(&[
+            &request.param("id")
+        ]).ok().expect("Deleting movie failed");
     });
 
     server.utilize(router);
