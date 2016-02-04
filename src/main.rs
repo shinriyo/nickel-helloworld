@@ -4,23 +4,24 @@ extern crate postgres;
 extern crate openssl;
 extern crate nickel_postgres;
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
-    StaticFilesHandler};
+    StaticFilesHandler,JsonBody};
 use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
 
 // テンプレのハッシュに使う
 use std::collections::HashMap;
 
-// json
+// json化
 extern crate rustc_serialize;
 use rustc_serialize::json::{Json, Parser};
 
 // モデル
+#[derive(RustcDecodable, RustcEncodable)]
 struct Movie {
-    id: i32,
+    // id: i32,
     title: String,
     director: String,
-    releaseYear: i32,
+    releaseYear: i16,
     genre: String,
 }
 
@@ -31,7 +32,7 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
     return match conn.execute("CREATE TABLE Movie (
         id          SERIAL PRIMARY KEY,
         title       VARCHAR (50) NOT NULL,
-        releaseYear DECIMAL (4)  NOT NULL,
+        releaseYear SMALLINT NOT NULL,
         director    VARCHAR (18) NOT NULL,
         genre       VARCHAR (50) NOT NULL
     )",
@@ -98,15 +99,17 @@ fn main() {
                 return response.send(format!("Preparing query failed: {}", e));
             }
         };
-        // test
-        println!("{}", request.param("title").unwrap());
 
-        stmt.execute(&[
-            &request.param("title"),
-            &request.param("releaseYear"),
-            &request.param("director"),
-            &request.param("genre")
-        ]).ok().expect("Inserting movie failed");
+        let movie = request.json_as::<Movie>().unwrap();
+        match stmt.execute(&[
+            &movie.title.to_string(),
+            &movie.releaseYear,
+            &movie.director.to_string(),
+            &movie.genre.to_string()
+        ]) {
+            Ok(v) => println!("Inserting movie was Success."),
+            Err(e) => println!("Inserting movie failed. => {:?}", e),
+        };
     });
 
     router.get("/api/movies/:id", middleware! { |request, response|
