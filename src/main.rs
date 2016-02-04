@@ -77,16 +77,19 @@ fn main() {
                 return response.send(format!("Preparing query failed: {}", e));
             }
         };
-        stmt.execute(&[]).ok().expect("Selecting movie failed");
+        match stmt.execute(&[]) {
+            Ok(v) => println!("Selecting movie was Success."),
+            Err(e) => println!("Selecting movie failed. => {:?}", e),
+        };
         // 仮データ
-        let mut movies =
+        let mut test_movies =
         r#"[
             { "title": "アイアンマン"},
             { "title": "アベンジャーズ"},
             { "title": "パディントン"}
         ]
         "#;
-        let json = Json::from_str(movies);
+        let json = Json::from_str(test_movies);
         format!("{}", json.unwrap())
     });
 
