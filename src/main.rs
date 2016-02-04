@@ -63,7 +63,7 @@ fn main() {
     let mut router = Nickel::router();
 
     // テーブル準備
-    router.get("/setup/movies", setup_table);
+    router.get("/setup/movie", setup_table);
     // 普通のページ
     router.get("/", index);
     //router.get("/movieApp", index);
@@ -78,15 +78,15 @@ fn main() {
             }
         };
         stmt.execute(&[]).ok().expect("Selecting movie failed");
-        let mut my_son =
-        r#"{
-            "movies": [
-                { "title": "アイアンマン"},
-                { "title": "アベンジャーズ"},
-                { "title": "パディントン"}
-            ]
-        }"#;
-        let json = Json::from_str(my_son);
+        // 仮データ
+        let mut movies =
+        r#"[
+            { "title": "アイアンマン"},
+            { "title": "アベンジャーズ"},
+            { "title": "パディントン"}
+        ]
+        "#;
+        let json = Json::from_str(movies);
         format!("{}", json.unwrap())
     });
 
