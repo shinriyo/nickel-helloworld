@@ -10,7 +10,7 @@ use postgres::{Connection, SslMode};
 
 // テンプレのハッシュに使う
 use std::collections::HashMap;
-
+use std::vec::Vec;
 // json化
 extern crate rustc_serialize;
 use rustc_serialize::json::{Json, Parser};
@@ -45,10 +45,10 @@ fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a>
 }
 
 // INDEX
-fn index<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
+fn index<'a>(req: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-    let mut data = HashMap::<&str, String>::new();
-    return res.render("app/movie/views/index.tpl", &data);
+    res.set(MediaType::Html);
+    res.send_file("app/movie/views/index.tpl")
 }
 
 fn main() {
@@ -69,7 +69,27 @@ fn main() {
     //router.get("/movieApp", index);
 
     // API
-    router.get("/api/movies", middleware! { |request, response|
+    fn content_type<'a>(_: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
+        //MediaType can be any valid type for reference see
+        res.set(MediaType::Json);
+        res.send("{'foo':'bar'}")
+//        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+//        let stmt = match conn.prepare("select title, releaseYear, director, genre from movie") {
+//            Ok(stmt) => stmt,
+//            Err(e) => {
+//                return res.send(format!("Preparing query failed: {}", e));
+//            }
+//        };
+//        let res = match stmt.execute(&[]) {
+//            Ok(v) => println!("Selecting movie was Success."),
+//            Err(e) => println!("Selecting movie failed. => {:?}", e),
+//        };
+//        res.send(&res.to_json())
+    }
+
+    router.get("/api/movies", content_type);
+
+    router.get("/api/movies_", middleware! { |request, response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
         let stmt = match conn.prepare("select title, releaseYear, director, genre from movie") {
             Ok(stmt) => stmt,
@@ -77,7 +97,7 @@ fn main() {
                 return response.send(format!("Preparing query failed: {}", e));
             }
         };
-        match stmt.execute(&[]) {
+        let res = match stmt.execute(&[]) {
             Ok(v) => println!("Selecting movie was Success."),
             Err(e) => println!("Selecting movie failed. => {:?}", e),
         };
@@ -91,6 +111,9 @@ fn main() {
         "#;
         let json = Json::from_str(test_movies);
         format!("{}", json.unwrap())
+
+//        let json = rows.to_json();
+//        response.render(json);
     });
 
     router.post("/api/movies", middleware! { |request, response|
