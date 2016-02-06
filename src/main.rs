@@ -6,7 +6,7 @@ extern crate nickel_postgres;
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
     StaticFilesHandler,JsonBody};
 use nickel::status::StatusCode;
-use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
+//use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
 
 // テンプレのハッシュに使う
@@ -118,18 +118,26 @@ fn main() {
         };
     });
 
-    router.get("/api/movies/:id", middleware! { |request, response|
+    router.get("/api/movies/:id", middleware! { |request, mut res|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("select title, releaseYear, director, genre from movie
-            from where id = $1") {
-            Ok(stmt) => stmt,
-            Err(e) => {
-                return response.send(format!("Preparing query failed: {}", e));
-            }
-        };
-        stmt.execute(&[
-            &request.param("id")
-        ]).ok().expect("Selecting movie failed");
+        let movie = &conn.query(
+        "select title, releaseYear, director, genre from movie where id = $1",
+        // param string to int
+        &[&request.param("id").unwrap().parse::<i32>().unwrap()]).unwrap();
+
+        for row in movie {
+            let movie = Movie {
+                title: row.get(0),
+                releaseYear: row.get(1),
+                director: row.get(2),
+                genre: row.get(3),
+            };
+
+            let json_obj = json::encode(&movie).unwrap();
+            res.set(MediaType::Json);
+            res.set(StatusCode::Ok);
+            return res.send(json_obj);
+        }
     });
 
     // update
@@ -148,7 +156,6 @@ fn main() {
             &request.param("releaseYear"),
             &request.param("director"),
             &request.param("genre"),
-            &request.param("id")
         ]).ok().expect("Updating movie failed");
     });
 
