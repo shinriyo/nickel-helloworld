@@ -5,6 +5,7 @@ extern crate openssl;
 extern crate nickel_postgres;
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
     StaticFilesHandler,JsonBody};
+use nickel::status::StatusCode;
 use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
 
@@ -13,7 +14,8 @@ use std::collections::HashMap;
 use std::vec::Vec;
 // json化
 extern crate rustc_serialize;
-use rustc_serialize::json::{Json, Parser};
+use rustc_serialize::{json};
+
 
 // モデル
 #[derive(RustcDecodable, RustcEncodable)]
@@ -87,9 +89,8 @@ fn main() {
 //        res.send(&res.to_json())
     }
 
-    router.get("/api/movies", content_type);
-
-    router.get("/api/movies_", middleware! { |request, response|
+    router.get("/api/movies_", content_type);
+    router.get("/api/movies", middleware! { |request, mut response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
         let stmt = match conn.prepare("select title, releaseYear, director, genre from movie") {
             Ok(stmt) => stmt,
@@ -97,23 +98,15 @@ fn main() {
                 return response.send(format!("Preparing query failed: {}", e));
             }
         };
-        let res = match stmt.execute(&[]) {
+        let movies = match stmt.execute(&[]) {
             Ok(v) => println!("Selecting movie was Success."),
             Err(e) => println!("Selecting movie failed. => {:?}", e),
         };
-        // 仮データ
-        let mut test_movies =
-        r#"[
-            { "title": "アイアンマン"},
-            { "title": "アベンジャーズ"},
-            { "title": "パディントン"}
-        ]
-        "#;
-        let json = Json::from_str(test_movies);
-        format!("{}", json.unwrap())
 
-//        let json = rows.to_json();
-//        response.render(json);
+        let json_obj = json::encode(&movies).unwrap();
+        response.set(MediaType::Json);
+        response.set(StatusCode::Ok);
+        return response.send(json_obj);
     });
 
     router.post("/api/movies", middleware! { |request, response|
