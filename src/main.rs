@@ -60,7 +60,6 @@ fn main() {
 //    });
 
     let shared_connection = Arc::new(Mutex::<Connection>::new(conn));
-//    let shared_connection = Arc::new(Mutex::new(conn));
 
     // テーブル準備
     {
@@ -86,7 +85,6 @@ fn main() {
 
     // APIs
     {
-        let conn = shared_connection.clone();
         router.get("/", middleware! { |_, mut response|
             response.set(MediaType::Html);
             return response.send_file("app/movie/views/index.tpl")
@@ -204,21 +202,14 @@ fn main() {
         });
     }
 
-    // TODO: not work from Angular.js yet but curl works fine
     // delete
     // curl http://localhost:6767/api/movies/1 -X DELETE
     {
         let conn = shared_connection.clone();
-        // TODO:
-//        router.delete("/api/movies:id", middleware! { |request, response|
-        router.delete("/api/movies", middleware! { |request, response|
-        let movie = request.json_as::<Movie>().unwrap();
-        println!("{}", &movie.title);
-
-            // TODO: it is bad to make new connection for each request remove later
-            // but the error happens...
-            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
-            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        router.delete("/api/movies/:id", middleware! { |request, response|
+//        router.delete("/api/movies", middleware! { |request, response|
+//        let movie = request.json_as::<Movie>().unwrap();
+            let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("delete from movie where id = $1") {
                 Ok(stmt) => stmt,
                 Err(e) => {
@@ -228,7 +219,7 @@ fn main() {
 
             match stmt.execute(&[
                 // param string to int
-//                &request.param("id").unwrap().parse::<i32>().unwrap()
+                &request.param("id").unwrap().parse::<i32>().unwrap()
             ]) {
                 Ok(v) => println!("Deleting movie was Success."),
                 Err(e) => println!("Deleting movie failed. => {:?}", e),
