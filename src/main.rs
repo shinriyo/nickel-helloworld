@@ -124,10 +124,7 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.post("/api/movies", middleware! { |request, response|
-            // TODO: it is bad to make new connection for each request remove later
-            // but the error happens...
-            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
-            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
                 values ($1, $2, $3, $4)") {
             Ok(stmt) => stmt,
