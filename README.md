@@ -25,3 +25,6 @@ http://localhost:6767/api/EmployeeInfoAPI/add/
 
 ## 起動
 cargo run
+
+## これを使ってる
+sfackler/rust-postgres
