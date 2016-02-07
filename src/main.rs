@@ -59,7 +59,7 @@ fn main() {
     let mut server = Nickel::new();
 
     // 静的ファイル
-    // http://nickel.rs/
+    // 例: http://nickel.rs/
     server.utilize(StaticFilesHandler::new("app/assets/"));
     // => 実際のアクセスは「http://localhost:6767/angular.js」
 
@@ -68,37 +68,42 @@ fn main() {
 
     // テーブル準備
     router.get("/setup/movie", setup_table);
-    // 普通のページ
-    router.get("/", index);
 
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
     let shared_connection = Arc::new(conn);
 
-    // API
-    fn select_movies<'a>(_: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
-        // MediaType can be any valid type for reference see
+    // APIs
+    router.get("/", middleware! { |request, mut response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let mut v: Vec<Movie> = vec![];
-        let movies = &conn.query("select title, releaseYear, director, genre from movie", &[]).unwrap();
+        response.set(MediaType::Html);
+        return response.send_file("app/movie/views/index.tpl")
+    });
 
-        for row in movies {
-            let movie = Movie {
-                title: row.get(0),
-                releaseYear: row.get(1),
-                director: row.get(2),
-                genre: row.get(3),
-            };
+    // select all
+    {
+        router.get("/api/movies", middleware! { |request, mut response|
+            // MediaType can be any valid type for reference see
+            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let mut v: Vec<Movie> = vec![];
+            let movies = &conn.query("select title, releaseYear, director, genre from movie", &[]).unwrap();
 
-            v.push(movie);
-        }
+            for row in movies {
+                let movie = Movie {
+                    title: row.get(0),
+                    releaseYear: row.get(1),
+                    director: row.get(2),
+                    genre: row.get(3),
+                };
 
-        let json_obj = json::encode(&v).unwrap();
-        res.set(MediaType::Json);
-        res.set(StatusCode::Ok);
-        return res.send(json_obj);
+                v.push(movie);
+            }
+
+            let json_obj = json::encode(&v).unwrap();
+            response.set(MediaType::Json);
+            response.set(StatusCode::Ok);
+            return response.send(json_obj);
+        });
     }
-
-    router.get("/api/movies", select_movies);
 
     // insert
     {
@@ -109,7 +114,7 @@ fn main() {
                 values ($1, $2, $3, $4)") {
             Ok(stmt) => stmt,
                 Err(e) => {
-                return response.send(format!("Preparing query failed: {}", e));
+                    return response.send(format!("Preparing query failed: {}", e));
                 }
             };
 
@@ -129,7 +134,7 @@ fn main() {
     // select
     {
         let conn = shared_connection.clone();
-        router.get("/api/movies/:id", middleware! { |request, mut res|
+        router.get("/api/movies/:id", middleware! { |request, mut response|
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             let movie = &conn.query(
             "select title, releaseYear, director, genre from movie where id = $1",
@@ -145,9 +150,9 @@ fn main() {
                 };
 
                 let json_obj = json::encode(&movie).unwrap();
-                res.set(MediaType::Json);
-                res.set(StatusCode::Ok);
-                return res.send(json_obj);
+                response.set(MediaType::Json);
+                response.set(StatusCode::Ok);
+                return response.send(json_obj);
             }
         });
     }
