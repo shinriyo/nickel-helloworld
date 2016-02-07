@@ -8,7 +8,7 @@ use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
 use nickel::status::StatusCode;
 //use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
-use std::sync::{Arc};
+use std::sync::{Arc, Mutex};
 
 // テンプレのハッシュに使う
 use std::collections::HashMap;
@@ -55,15 +55,19 @@ fn main() {
 //        println!("DELETE:{}.", request.path_without_query().unwrap());
 //    });
 //
-    router.put("**", middleware! { |request, response|
-        println!("PUT:{}.", request.path_without_query().unwrap());
-    });
+//    router.put("**", middleware! { |request, response|
+//        println!("PUT:{}.", request.path_without_query().unwrap());
+//    });
+
+    let shared_connection = Arc::new(Mutex::<Connection>::new(conn));
+//    let shared_connection = Arc::new(Mutex::new(conn));
 
     // テーブル準備
-    router.get("/setup/movie", middleware! { |_, response|
-        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+    {
+        let conn = shared_connection.clone();
+        router.get("/setup/movie", middleware! { |_, response|
         // also print to stdout
-        return match conn.execute("CREATE TABLE Movie (
+        return match conn.lock().unwrap().execute("CREATE TABLE Movie (
                 id          SERIAL PRIMARY KEY,
                 title       VARCHAR (50) NOT NULL,
                 releaseYear SMALLINT NOT NULL,
@@ -71,23 +75,19 @@ fn main() {
                 genre       VARCHAR (50) NOT NULL
             )",
         &[]) {
-            // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
-            Ok(n) => return response.send("Movie table was created."),
-            // エラー
-            Err(err) => return response.send(format!("Error running query: {:?}", err))
-        };
-    });
+                // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
+                Ok(n) => return response.send("Movie table was created."),
+                // エラー
+                Err(err) => return response.send(format!("Error running query: {:?}", err))
+            };
+        });
+    }
 
-    let shared_connection = Arc::new(conn);
 
     // APIs
     {
         let conn = shared_connection.clone();
         router.get("/", middleware! { |_, mut response|
-            // TODO: it is bad to make new connection for each request remove later
-            // but the error happens...
-            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
-            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             response.set(MediaType::Html);
             return response.send_file("app/movie/views/index.tpl")
         });
@@ -218,7 +218,9 @@ fn main() {
     // curl http://localhost:6767/api/movies/1 -X DELETE
     {
         let conn = shared_connection.clone();
-        router.delete("/api/movies:id", middleware! { |request, response|
+        // TODO:
+//        router.delete("/api/movies:id", middleware! { |request, response|
+        router.delete("/api/movies", middleware! { |request, response|
             // TODO: it is bad to make new connection for each request remove later
             // but the error happens...
             // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
@@ -229,7 +231,7 @@ fn main() {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
-        println!("{}", &request.param("id").unwrap());
+//        println!("{}", request.server_data());
             match stmt.execute(&[
                 // param string to int
                 &request.param("id").unwrap().parse::<i32>().unwrap()
