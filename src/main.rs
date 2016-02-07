@@ -8,6 +8,7 @@ use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
 use nickel::status::StatusCode;
 //use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
+use std::sync::{Arc};
 
 // テンプレのハッシュに使う
 use std::collections::HashMap;
@@ -70,6 +71,9 @@ fn main() {
     // 普通のページ
     router.get("/", index);
 
+    let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+    let shared_connection = Arc::new(conn);
+
     // API
     fn content_type<'a>(_: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
         // MediaType can be any valid type for reference see
@@ -95,28 +99,30 @@ fn main() {
     }
 
     router.get("/api/movies", content_type);
-
-    router.post("/api/movies", middleware! { |request, response|
+    {
+        let conn = shared_connection.clone();
+        router.post("/api/movies", middleware! { |request, response|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
         let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
             values ($1, $2, $3, $4)") {
-            Ok(stmt) => stmt,
-            Err(e) => {
-                return response.send(format!("Preparing query failed: {}", e));
-            }
+        Ok(stmt) => stmt,
+        Err(e) => {
+        return response.send(format!("Preparing query failed: {}", e));
+        }
         };
 
         let movie = request.json_as::<Movie>().unwrap();
         match stmt.execute(&[
-            &movie.title.to_string(),
-            &movie.releaseYear,
-            &movie.director.to_string(),
-            &movie.genre.to_string()
+        &movie.title.to_string(),
+        &movie.releaseYear,
+        &movie.director.to_string(),
+        &movie.genre.to_string()
         ]) {
-            Ok(v) => println!("Inserting movie was Success."),
-            Err(e) => println!("Inserting movie failed. => {:?}", e),
+        Ok(v) => println!("Inserting movie was Success."),
+        Err(e) => println!("Inserting movie failed. => {:?}", e),
         };
-    });
+        });
+    }
 
     router.get("/api/movies/:id", middleware! { |request, mut res|
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
