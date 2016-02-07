@@ -67,6 +67,9 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.get("/", middleware! { |_, mut response|
+            // TODO: it is bad to make new connection for each request remove later
+            // but the error happens...
+            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             response.set(MediaType::Html);
             return response.send_file("app/movie/views/index.tpl")
@@ -76,8 +79,10 @@ fn main() {
     // select all
     {
         let conn = shared_connection.clone();
-        router.get("/api/movies", middleware! { |request, mut response|
-            // MediaType can be any valid type for reference see
+        router.get("/api/movies", middleware! { |_, mut response|
+            // TODO: it is bad to make new connection for each request remove later
+            // but the error happens...
+            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             let mut v: Vec<Movie> = vec![];
             let movies = &conn.query("select title, releaseYear, director, genre from movie", &[]).unwrap();
@@ -94,6 +99,7 @@ fn main() {
             }
 
             let json_obj = json::encode(&v).unwrap();
+            // MediaType can be any valid type for reference see
             response.set(MediaType::Json);
             response.set(StatusCode::Ok);
             return response.send(json_obj);
@@ -104,6 +110,9 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.post("/api/movies", middleware! { |request, response|
+            // TODO: it is bad to make new connection for each request remove later
+            // but the error happens...
+            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
                 values ($1, $2, $3, $4)") {
@@ -130,11 +139,15 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.get("/api/movies/:id", middleware! { |request, mut response|
+            // TODO: it is bad to make new connection for each request remove later
+            // but the error happens...
+            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             let movie = &conn.query(
-            "select title, releaseYear, director, genre from movie where id = $1",
-            // param string to int
-            &[&request.param("id").unwrap().parse::<i32>().unwrap()]).unwrap();
+                "select title, releaseYear, director, genre from movie where id = $1",
+                // param string to int
+                &[&request.param("id").unwrap().parse::<i32>().unwrap()]
+            ).unwrap();
 
             for row in movie {
                 let movie = Movie {
@@ -145,6 +158,7 @@ fn main() {
                 };
 
                 let json_obj = json::encode(&movie).unwrap();
+                // MediaType can be any valid type for reference see
                 response.set(MediaType::Json);
                 response.set(StatusCode::Ok);
                 return response.send(json_obj);
@@ -152,10 +166,27 @@ fn main() {
         });
     }
 
+    // for what url called loggin
+    router.post("**", middleware! { |request, response|
+        println!("{}.", request.path_without_query().unwrap());
+    });
+
+    router.delete("**", middleware! { |request, response|
+        println!("{}.", request.path_without_query().unwrap());
+    });
+
+    router.put("**", middleware! { |request, response|
+        println!("{}.", request.path_without_query().unwrap());
+    });
+
+    // TODO: not work from Angular.js yet
     // update
     {
         let conn = shared_connection.clone();
         router.put("/api/movies/:id", middleware! { |request, response|
+            // TODO: it is bad to make new connection for each request remove later
+            // but the error happens...
+            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
                 director=$3, genre=$4)
@@ -178,17 +209,23 @@ fn main() {
         });
     }
 
+    // TODO: not work from Angular.js yet but curl works fine
     // delete
+    // curl http://localhost:6767/api/movies/1 -X DELETE
     {
         let conn = shared_connection.clone();
         router.delete("/api/movies/:id", middleware! { |request, response|
+            // TODO: it is bad to make new connection for each request remove later
+            // but the error happens...
+            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-            let stmt = match conn.prepare("delete movie where id = $1") {
+            let stmt = match conn.prepare("delete from movie where id = $1") {
                 Ok(stmt) => stmt,
                 Err(e) => {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
+        println!("{}", &request.param("id").unwrap());
             match stmt.execute(&[
                 // param string to int
                 &request.param("id").unwrap().parse::<i32>().unwrap()
