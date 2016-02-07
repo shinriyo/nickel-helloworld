@@ -75,7 +75,7 @@ fn main() {
     let shared_connection = Arc::new(conn);
 
     // API
-    fn content_type<'a>(_: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
+    fn select_movies<'a>(_: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
         // MediaType can be any valid type for reference see
         let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
         let mut v: Vec<Movie> = vec![];
@@ -98,29 +98,30 @@ fn main() {
         return res.send(json_obj);
     }
 
-    router.get("/api/movies", content_type);
+    router.get("/api/movies", select_movies);
+
     {
         let conn = shared_connection.clone();
         router.post("/api/movies", middleware! { |request, response|
-        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
-            values ($1, $2, $3, $4)") {
-        Ok(stmt) => stmt,
-        Err(e) => {
-        return response.send(format!("Preparing query failed: {}", e));
-        }
-        };
+            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
+                values ($1, $2, $3, $4)") {
+            Ok(stmt) => stmt,
+                Err(e) => {
+                return response.send(format!("Preparing query failed: {}", e));
+                }
+            };
 
-        let movie = request.json_as::<Movie>().unwrap();
-        match stmt.execute(&[
-        &movie.title.to_string(),
-        &movie.releaseYear,
-        &movie.director.to_string(),
-        &movie.genre.to_string()
-        ]) {
-        Ok(v) => println!("Inserting movie was Success."),
-        Err(e) => println!("Inserting movie failed. => {:?}", e),
-        };
+            let movie = request.json_as::<Movie>().unwrap();
+            match stmt.execute(&[
+                &movie.title.to_string(),
+                &movie.releaseYear,
+                &movie.director.to_string(),
+                &movie.genre.to_string()
+            ]) {
+                Ok(v) => println!("Inserting movie was Success."),
+                Err(e) => println!("Inserting movie failed. => {:?}", e),
+            };
         });
     }
 
