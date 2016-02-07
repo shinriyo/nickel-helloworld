@@ -97,14 +97,11 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.get("/api/movies", middleware! { |_, mut response|
-            // TODO: it is bad to make new connection for each request remove later
-            // but the error happens...
-            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
-            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let conn = conn.lock().unwrap();
+            let movies = conn.query("select title, releaseYear, director, genre from movie", &[]).unwrap();
             let mut v: Vec<Movie> = vec![];
-            let movies = &conn.query("select title, releaseYear, director, genre from movie", &[]).unwrap();
 
-            for row in movies {
+            for row in &movies {
                 let movie = Movie {
                     title: row.get(0),
                     releaseYear: row.get(1),
@@ -221,6 +218,9 @@ fn main() {
         // TODO:
 //        router.delete("/api/movies:id", middleware! { |request, response|
         router.delete("/api/movies", middleware! { |request, response|
+        let movie = request.json_as::<Movie>().unwrap();
+        println!("{}", &movie.title);
+
             // TODO: it is bad to make new connection for each request remove later
             // but the error happens...
             // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
@@ -231,10 +231,10 @@ fn main() {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
-//        println!("{}", request.server_data());
+
             match stmt.execute(&[
                 // param string to int
-                &request.param("id").unwrap().parse::<i32>().unwrap()
+//                &request.param("id").unwrap().parse::<i32>().unwrap()
             ]) {
                 Ok(v) => println!("Deleting movie was Success."),
                 Err(e) => println!("Deleting movie failed. => {:?}", e),
