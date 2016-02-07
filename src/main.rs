@@ -100,6 +100,7 @@ fn main() {
 
     router.get("/api/movies", select_movies);
 
+    // insert
     {
         let conn = shared_connection.clone();
         router.post("/api/movies", middleware! { |request, response|
@@ -125,59 +126,69 @@ fn main() {
         });
     }
 
-    router.get("/api/movies/:id", middleware! { |request, mut res|
-        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let movie = &conn.query(
-        "select title, releaseYear, director, genre from movie where id = $1",
-        // param string to int
-        &[&request.param("id").unwrap().parse::<i32>().unwrap()]).unwrap();
+    // select
+    {
+        let conn = shared_connection.clone();
+        router.get("/api/movies/:id", middleware! { |request, mut res|
+            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let movie = &conn.query(
+            "select title, releaseYear, director, genre from movie where id = $1",
+            // param string to int
+            &[&request.param("id").unwrap().parse::<i32>().unwrap()]).unwrap();
 
-        for row in movie {
-            let movie = Movie {
+            for row in movie {
+                let movie = Movie {
                 title: row.get(0),
                 releaseYear: row.get(1),
                 director: row.get(2),
                 genre: row.get(3),
-            };
+                };
 
-            let json_obj = json::encode(&movie).unwrap();
-            res.set(MediaType::Json);
-            res.set(StatusCode::Ok);
-            return res.send(json_obj);
-        }
-    });
+                let json_obj = json::encode(&movie).unwrap();
+                res.set(MediaType::Json);
+                res.set(StatusCode::Ok);
+                return res.send(json_obj);
+            }
+        });
+    }
 
     // update
-    router.put("/api/movies/:id", middleware! { |request, response|
-        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
-            director=$3, genre=$4)
-            where id = $5") {
-            Ok(stmt) => stmt,
-            Err(e) => {
-                return response.send(format!("Preparing query failed: {}", e));
-            }
-        };
-        stmt.execute(&[
-            &request.param("title"),
-            &request.param("releaseYear"),
-            &request.param("director"),
-            &request.param("genre"),
-        ]).ok().expect("Updating movie failed");
-    });
+    {
+        let conn = shared_connection.clone();
+        router.put("/api/movies/:id", middleware! { |request, response|
+            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
+                director=$3, genre=$4)
+                where id = $5") {
+                Ok(stmt) => stmt,
+                    Err(e) => {
+                    return response.send(format!("Preparing query failed: {}", e));
+                }
+            };
+            stmt.execute(&[
+                &request.param("title"),
+                &request.param("releaseYear"),
+                &request.param("director"),
+                &request.param("genre"),
+            ]).ok().expect("Updating movie failed");
+        });
+    }
 
-    router.delete("/api/movies/:id", middleware! { |request, response|
-        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        let stmt = match conn.prepare("delete movie where id = $1") {
-            Ok(stmt) => stmt,
-            Err(e) => {
-                return response.send(format!("Preparing query failed: {}", e));
-            }
-        };
-        stmt.execute(&[
-            &request.param("id")
-        ]).ok().expect("Deleting movie failed");
-    });
+    // delete
+    {
+        router.delete("/api/movies/:id", middleware! { |request, response|
+            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            let stmt = match conn.prepare("delete movie where id = $1") {
+                Ok(stmt) => stmt,
+                Err(e) => {
+                    return response.send(format!("Preparing query failed: {}", e));
+                }
+            };
+            stmt.execute(&[
+                &request.param("id")
+            ]).ok().expect("Deleting movie failed");
+        });
+    }
 
     server.utilize(router);
     server.listen("localhost:6767");
