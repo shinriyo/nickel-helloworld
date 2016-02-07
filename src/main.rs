@@ -2,7 +2,7 @@
 
 extern crate postgres;
 extern crate openssl;
-extern crate nickel_postgres;
+//extern crate nickel_postgres;
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
     StaticFilesHandler,JsonBody};
 use nickel::status::StatusCode;
@@ -41,6 +41,23 @@ fn main() {
     let mut router = Nickel::router();
 
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+
+    // for what url called logging
+//    router.get("**", middleware! { |request, response|
+//        println!("GET: {}.", request.path_without_query().unwrap());
+//    });
+//
+//    router.post("**", middleware! { |request, response|
+//        println!("POST:{}.", request.path_without_query().unwrap());
+//    });
+//
+//    router.delete("**", middleware! { |request, response|
+//        println!("DELETE:{}.", request.path_without_query().unwrap());
+//    });
+//
+    router.put("**", middleware! { |request, response|
+        println!("PUT:{}.", request.path_without_query().unwrap());
+    });
 
     // テーブル準備
     router.get("/setup/movie", middleware! { |_, response|
@@ -166,19 +183,6 @@ fn main() {
         });
     }
 
-    // for what url called loggin
-    router.post("**", middleware! { |request, response|
-        println!("{}.", request.path_without_query().unwrap());
-    });
-
-    router.delete("**", middleware! { |request, response|
-        println!("{}.", request.path_without_query().unwrap());
-    });
-
-    router.put("**", middleware! { |request, response|
-        println!("{}.", request.path_without_query().unwrap());
-    });
-
     // TODO: not work from Angular.js yet
     // update
     {
@@ -214,7 +218,7 @@ fn main() {
     // curl http://localhost:6767/api/movies/1 -X DELETE
     {
         let conn = shared_connection.clone();
-        router.delete("/api/movies/:id", middleware! { |request, response|
+        router.delete("/api/movies:id", middleware! { |request, response|
             // TODO: it is bad to make new connection for each request remove later
             // but the error happens...
             // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
