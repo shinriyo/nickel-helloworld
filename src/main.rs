@@ -29,32 +29,6 @@ struct Movie {
     genre: String,
 }
 
-// テーブルのセットアップ
-fn setup_table<'a>(req: &mut Request, res: Response<'a>) -> MiddlewareResult<'a> {
-    let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-    // also print to stdout
-    return match conn.execute("CREATE TABLE Movie (
-        id          SERIAL PRIMARY KEY,
-        title       VARCHAR (50) NOT NULL,
-        releaseYear SMALLINT NOT NULL,
-        director    VARCHAR (18) NOT NULL,
-        genre       VARCHAR (50) NOT NULL
-    )",
-    &[]) {
-        // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
-        Ok(n) => return res.send("Movie table was created."),
-        // エラー
-        Err(err) => return res.send(format!("Error running query: {:?}", err))
-    };
-}
-
-// INDEX
-fn index<'a>(req: &mut Request, mut res: Response<'a>) -> MiddlewareResult<'a> {
-    let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-    res.set(MediaType::Html);
-    res.send_file("app/movie/views/index.tpl")
-}
-
 fn main() {
     let mut server = Nickel::new();
 
@@ -66,21 +40,42 @@ fn main() {
     // URLのセット
     let mut router = Nickel::router();
 
-    // テーブル準備
-    router.get("/setup/movie", setup_table);
-
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+
+    // テーブル準備
+    router.get("/setup/movie", middleware! { |_, response|
+        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+        // also print to stdout
+        return match conn.execute("CREATE TABLE Movie (
+                id          SERIAL PRIMARY KEY,
+                title       VARCHAR (50) NOT NULL,
+                releaseYear SMALLINT NOT NULL,
+                director    VARCHAR (18) NOT NULL,
+                genre       VARCHAR (50) NOT NULL
+            )",
+        &[]) {
+            // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
+            Ok(n) => return response.send("Movie table was created."),
+            // エラー
+            Err(err) => return response.send(format!("Error running query: {:?}", err))
+        };
+    });
+
     let shared_connection = Arc::new(conn);
 
     // APIs
-    router.get("/", middleware! { |request, mut response|
-        let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-        response.set(MediaType::Html);
-        return response.send_file("app/movie/views/index.tpl")
-    });
+    {
+        let conn = shared_connection.clone();
+        router.get("/", middleware! { |_, mut response|
+            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+            response.set(MediaType::Html);
+            return response.send_file("app/movie/views/index.tpl")
+        });
+    }
 
     // select all
     {
+        let conn = shared_connection.clone();
         router.get("/api/movies", middleware! { |request, mut response|
             // MediaType can be any valid type for reference see
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
@@ -131,7 +126,7 @@ fn main() {
         });
     }
 
-    // select
+    // select one
     {
         let conn = shared_connection.clone();
         router.get("/api/movies/:id", middleware! { |request, mut response|
@@ -170,17 +165,22 @@ fn main() {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
-            stmt.execute(&[
+            match stmt.execute(&[
                 &request.param("title"),
                 &request.param("releaseYear"),
                 &request.param("director"),
                 &request.param("genre"),
-            ]).ok().expect("Updating movie failed");
+                &request.param("id").unwrap().parse::<i32>().unwrap(),
+            ]) {
+                Ok(v) => println!("Updating movie was Success."),
+                Err(e) => println!("Updating movie failed. => {:?}", e),
+            };
         });
     }
 
     // delete
     {
+        let conn = shared_connection.clone();
         router.delete("/api/movies/:id", middleware! { |request, response|
             let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
             let stmt = match conn.prepare("delete movie where id = $1") {
@@ -189,9 +189,13 @@ fn main() {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
-            stmt.execute(&[
-                &request.param("id")
-            ]).ok().expect("Deleting movie failed");
+            match stmt.execute(&[
+                // param string to int
+                &request.param("id").unwrap().parse::<i32>().unwrap()
+            ]) {
+                Ok(v) => println!("Deleting movie was Success."),
+                Err(e) => println!("Deleting movie failed. => {:?}", e),
+            };
         });
     }
 
