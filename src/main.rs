@@ -2,11 +2,9 @@
 
 extern crate postgres;
 extern crate openssl;
-//extern crate nickel_postgres;
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
     StaticFilesHandler,JsonBody};
 use nickel::status::StatusCode;
-//use nickel_postgres::{PostgresMiddleware, PostgresRequestExtensions};
 use postgres::{Connection, SslMode};
 use std::sync::{Arc, Mutex};
 
