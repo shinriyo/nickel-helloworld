@@ -151,6 +151,7 @@ fn main() {
                 Err(e) => println!("Inserting movie failed. => {:?}", e),
             };
 
+        response.set(StatusCode::Ok);
             // 返さないとダメ
 //            return response.set(Location("/".into()));
         });
@@ -160,14 +161,11 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.get("/api/movies/:id", middleware! { |request, mut response|
-//        router.get("/api/movies", middleware! { |request, mut response|
             let conn = conn.lock().unwrap();
-            let param_movie = request.json_as::<Movie>().unwrap(); // TODO:
             let movie = conn.query(
-                "select title, releaseYear, director, genre from movie where id = $1",
+                "select id, title, releaseYear, director, genre from movie where id = $1",
                 // param string to int
-//                &[&request.param("id").unwrap().parse::<i32>().unwrap()]
-                &[&param_movie.id]
+                &[&request.param("id").unwrap().parse::<i32>().unwrap()]
             ).unwrap();
 
             // movie
