@@ -2,6 +2,8 @@
 
 extern crate postgres;
 extern crate openssl;
+extern crate hyper;
+
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
     StaticFilesHandler,JsonBody};
 use nickel::status::StatusCode;
@@ -16,11 +18,19 @@ extern crate rustc_serialize;
 use rustc_serialize::{json};
 use rustc_serialize::json::{Json, Parser};
 use std::collections::BTreeMap;
-
+use hyper::header::Location;
 // モデル
 #[derive(RustcDecodable, RustcEncodable)]
 struct Movie {
-    // id: i32,
+    id: i32,
+    title: String,
+    director: String,
+    releaseYear: i16,
+    genre: String,
+}
+
+#[derive(RustcDecodable, RustcEncodable)]
+struct MovieInsert  {
     title: String,
     director: String,
     releaseYear: i16,
@@ -94,15 +104,16 @@ fn main() {
         let conn = shared_connection.clone();
         router.get("/api/movies", middleware! { |_, mut response|
             let conn = conn.lock().unwrap();
-            let movies = conn.query("select title, releaseYear, director, genre from movie", &[]).unwrap();
+            let movies = conn.query("select id, title, releaseYear, director, genre from movie", &[]).unwrap();
             let mut v: Vec<Movie> = vec![];
 
             for row in &movies {
                 let movie = Movie {
-                    title: row.get(0),
-                    releaseYear: row.get(1),
-                    director: row.get(2),
-                    genre: row.get(3),
+                    id: row.get(0),
+                    title: row.get(1),
+                    releaseYear: row.get(2),
+                    director: row.get(3),
+                    genre: row.get(4),
                 };
 
                 v.push(movie);
@@ -119,17 +130,17 @@ fn main() {
     // insert
     {
         let conn = shared_connection.clone();
-        router.post("/api/movies", middleware! { |request, response|
+        router.post("/api/movies", middleware! { |request, mut response|
             let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
                 values ($1, $2, $3, $4)") {
-            Ok(stmt) => stmt,
+                Ok(stmt) => stmt,
                 Err(e) => {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
 
-            let movie = request.json_as::<Movie>().unwrap();
+            let movie = request.json_as::<MovieInsert>().unwrap();
             match stmt.execute(&[
                 &movie.title.to_string(),
                 &movie.releaseYear,
@@ -139,6 +150,9 @@ fn main() {
                 Ok(v) => println!("Inserting movie was Success."),
                 Err(e) => println!("Inserting movie failed. => {:?}", e),
             };
+
+            // 返さないとダメ
+//            return response.set(Location("/".into()));
         });
     }
 
@@ -146,19 +160,24 @@ fn main() {
     {
         let conn = shared_connection.clone();
         router.get("/api/movies/:id", middleware! { |request, mut response|
+//        router.get("/api/movies", middleware! { |request, mut response|
             let conn = conn.lock().unwrap();
+            let param_movie = request.json_as::<Movie>().unwrap(); // TODO:
             let movie = conn.query(
                 "select title, releaseYear, director, genre from movie where id = $1",
                 // param string to int
-                &[&request.param("id").unwrap().parse::<i32>().unwrap()]
+//                &[&request.param("id").unwrap().parse::<i32>().unwrap()]
+                &[&param_movie.id]
             ).unwrap();
 
+            // movie
             for row in &movie {
                 let movie = Movie {
-                title: row.get(0),
-                releaseYear: row.get(1),
-                director: row.get(2),
-                genre: row.get(3),
+                    id: row.get(0),
+                    title: row.get(1),
+                    releaseYear: row.get(2),
+                    director: row.get(3),
+                    genre: row.get(4),
                 };
 
                 let json_obj = json::encode(&movie).unwrap();
@@ -174,29 +193,42 @@ fn main() {
     // update
     {
         let conn = shared_connection.clone();
+        // :id想定だった
         router.put("/api/movies/:id", middleware! { |request, response|
-            // TODO: it is bad to make new connection for each request remove later
-            // but the error happens...
-            // core::marker::Sync is not implemented for the type core::cell::UnsafeCell<postgres::InnerConnection>
-            let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
+//        router.put("/api/movies", middleware! { |request, response|
+            let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
-                director=$3, genre=$4)
+                director=$3, genre=$4
                 where id = $5") {
                 Ok(stmt) => stmt,
                     Err(e) => {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
+
+            let movie = request.json_as::<Movie>().unwrap();
             match stmt.execute(&[
-                &request.param("title"),
-                &request.param("releaseYear"),
-                &request.param("director"),
-                &request.param("genre"),
-                &request.param("id").unwrap().parse::<i32>().unwrap(),
+                &movie.title.to_string(),
+                &movie.releaseYear,
+                &movie.director.to_string(),
+                &movie.genre.to_string(),
+                &movie.id
             ]) {
                 Ok(v) => println!("Updating movie was Success."),
                 Err(e) => println!("Updating movie failed. => {:?}", e),
             };
+
+        // :id想定だった
+//            match stmt.execute(&[
+//                &request.param("title"),
+//                &request.param("releaseYear"),
+//                &request.param("director"),
+//                &request.param("genre"),
+//                &request.param("id").unwrap().parse::<i32>().unwrap(),
+//            ]) {
+//                Ok(v) => println!("Updating movie was Success."),
+//                Err(e) => println!("Updating movie failed. => {:?}", e),
+//            };
         });
     }
 
@@ -204,9 +236,8 @@ fn main() {
     // curl http://localhost:6767/api/movies/1 -X DELETE
     {
         let conn = shared_connection.clone();
-        router.delete("/api/movies/:id", middleware! { |request, response|
-//        router.delete("/api/movies", middleware! { |request, response|
-//        let movie = request.json_as::<Movie>().unwrap();
+//        router.delete("/api/movies/:id", middleware! { |request, response|
+        router.delete("/api/movies", middleware! { |request, response|
             let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("delete from movie where id = $1") {
                 Ok(stmt) => stmt,
@@ -215,9 +246,11 @@ fn main() {
                 }
             };
 
+            let movie = request.json_as::<Movie>().unwrap();
             match stmt.execute(&[
                 // param string to int
-                &request.param("id").unwrap().parse::<i32>().unwrap()
+//                &request.param("id").unwrap().parse::<i32>().unwrap()
+                &movie.id
             ]) {
                 Ok(v) => println!("Deleting movie was Success."),
                 Err(e) => println!("Deleting movie failed. => {:?}", e),
