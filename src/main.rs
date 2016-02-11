@@ -22,7 +22,7 @@ use hyper::header::Location;
 // モデル
 #[derive(RustcDecodable, RustcEncodable)]
 struct Movie {
-    id: i32,
+    _id: i32,
     title: String,
     director: String,
     releaseYear: i16,
@@ -109,7 +109,7 @@ fn main() {
 
             for row in &movies {
                 let movie = Movie {
-                    id: row.get(0),
+                    _id: row.get(0),
                     title: row.get(1),
                     releaseYear: row.get(2),
                     director: row.get(3),
@@ -151,9 +151,9 @@ fn main() {
                 Err(e) => println!("Inserting movie failed. => {:?}", e),
             };
 
-        response.set(StatusCode::Ok);
-            // 返さないとダメ
-//            return response.set(Location("/".into()));
+//            response.set(StatusCode::PermanentRedirect)
+//                .set(Location("/".into()));
+//            ""
         });
     }
 
@@ -171,7 +171,7 @@ fn main() {
             // movie
             for row in &movie {
                 let movie = Movie {
-                    id: row.get(0),
+                    _id: row.get(0),
                     title: row.get(1),
                     releaseYear: row.get(2),
                     director: row.get(3),
@@ -210,7 +210,7 @@ fn main() {
                 &movie.releaseYear,
                 &movie.director.to_string(),
                 &movie.genre.to_string(),
-                &movie.id
+                &movie._id
             ]) {
                 Ok(v) => println!("Updating movie was Success."),
                 Err(e) => println!("Updating movie failed. => {:?}", e),
@@ -248,7 +248,7 @@ fn main() {
             match stmt.execute(&[
                 // param string to int
 //                &request.param("id").unwrap().parse::<i32>().unwrap()
-                &movie.id
+                &movie._id
             ]) {
                 Ok(v) => println!("Deleting movie was Success."),
                 Err(e) => println!("Deleting movie failed. => {:?}", e),
