@@ -18,13 +18,23 @@ http://localhost:6767/setup/
 ## CRUD
 
 ### 一覧
-http://localhost:6767/api/EmployeeInfoAPI/
+GET http://localhost:6767/api/movie/
+
+### 一件
+GET http://localhost:6767/api/movie/:id
 
 ### 追加
-http://localhost:6767/api/EmployeeInfoAPI/add/
+POST http://localhost:6767/api/movie/:id
+
+### 更新
+PUT http://localhost:6767/api/movie
+
+## 削除
+DELETE http://localhost:6767/api/movie/:id
 
 ## 起動
 cargo run
 
 ## これを使ってる
+postgres = "0.11"
 sfackler/rust-postgres
