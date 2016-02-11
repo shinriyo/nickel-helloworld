@@ -187,23 +187,21 @@ fn main() {
         });
     }
 
-    // TODO: not work from Angular.js yet
     // update
     {
         let conn = shared_connection.clone();
-        // :id想定だった
-        router.put("/api/movies/:id", middleware! { |request, response|
-//        router.put("/api/movies", middleware! { |request, response|
+        router.put("/api/movies/:id", middleware! { |request, mut response|
             let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
                 director=$3, genre=$4
                 where id = $5") {
                 Ok(stmt) => stmt,
-                    Err(e) => {
+                Err(e) => {
                     return response.send(format!("Preparing query failed: {}", e));
                 }
             };
 
+            // JSON to object
             let movie = request.json_as::<Movie>().unwrap();
             match stmt.execute(&[
                 &movie.title.to_string(),
@@ -212,21 +210,14 @@ fn main() {
                 &movie.genre.to_string(),
                 &movie._id
             ]) {
-                Ok(v) => println!("Updating movie was Success."),
+                Ok(v) => {
+                    println!("Updating movie was Success.");
+                    response.set(StatusCode::Ok);
+                },
                 Err(e) => println!("Updating movie failed. => {:?}", e),
             };
 
-        // :id想定だった
-//            match stmt.execute(&[
-//                &request.param("title"),
-//                &request.param("releaseYear"),
-//                &request.param("director"),
-//                &request.param("genre"),
-//                &request.param("id").unwrap().parse::<i32>().unwrap(),
-//            ]) {
-//                Ok(v) => println!("Updating movie was Success."),
-//                Err(e) => println!("Updating movie failed. => {:?}", e),
-//            };
+            return response.send("");
         });
     }
 
@@ -234,8 +225,7 @@ fn main() {
     // curl http://localhost:6767/api/movies/1 -X DELETE
     {
         let conn = shared_connection.clone();
-//        router.delete("/api/movies/:id", middleware! { |request, response|
-        router.delete("/api/movies", middleware! { |request, response|
+        router.delete("/api/movies/:id", middleware! { |request, mut response|
             let conn = conn.lock().unwrap();
             let stmt = match conn.prepare("delete from movie where id = $1") {
                 Ok(stmt) => stmt,
@@ -244,15 +234,18 @@ fn main() {
                 }
             };
 
-            let movie = request.json_as::<Movie>().unwrap();
             match stmt.execute(&[
                 // param string to int
-//                &request.param("id").unwrap().parse::<i32>().unwrap()
-                &movie._id
+                &request.param("id").unwrap().parse::<i32>().unwrap()
             ]) {
-                Ok(v) => println!("Deleting movie was Success."),
+                Ok(v) => {
+                    println!("Deleting movie was Success.");
+                    response.set(StatusCode::Ok);
+                },
                 Err(e) => println!("Deleting movie failed. => {:?}", e),
             };
+
+            return response.send("");
         });
     }
 
