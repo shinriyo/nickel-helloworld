@@ -19,6 +19,7 @@ use rustc_serialize::{json};
 use rustc_serialize::json::{Json, Parser};
 use std::collections::BTreeMap;
 use hyper::header::Location;
+
 // モデル
 #[derive(RustcDecodable, RustcEncodable)]
 struct Movie {
@@ -147,13 +148,17 @@ fn main() {
                 &movie.director.to_string(),
                 &movie.genre.to_string()
             ]) {
-                Ok(v) => println!("Inserting movie was Success."),
+                Ok(v) => {
+                    println!("Inserting movie was Success.");
+                    response.set(StatusCode::Ok);
+                },
                 Err(e) => println!("Inserting movie failed. => {:?}", e),
             };
 
 //            response.set(StatusCode::PermanentRedirect)
 //                .set(Location("/".into()));
 //            ""
+            return response.send("");
         });
     }
 
