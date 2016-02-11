@@ -30,11 +30,11 @@
         </div>
     </div>
     <script type="text/javascript" src="lib/angular.min.js"></script>
-    <script type="text/javascript" src="js/app.js"></script>
-    <script type="text/javascript" src="js/controllers.js"></script>
-    <script type="text/javascript" src="js/services.js"></script>
-    <script type="text/javascript" src="js/directives.js"></script>
-    <script type="text/javascript" src="js/filters.js"></script>
+    <script type="text/javascript" src="movie/js/app.js"></script>
+    <script type="text/javascript" src="movie/js/controllers.js"></script>
+    <script type="text/javascript" src="movie/js/services.js"></script>
+    <script type="text/javascript" src="movie/js/directives.js"></script>
+    <script type="text/javascript" src="movie/js/filters.js"></script>
     <script type="text/javascript" src="lib/angular-ui-router.min.js"></script>
     <script type="text/javascript" src="lib/angular-resource.min.js"></script>
 </body>
