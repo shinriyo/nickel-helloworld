@@ -1,40 +1,40 @@
 # nickel-helloworld
 
-#  自分用のrust言語+nickelフレームワーク+PostgreSQLのテンプレ　これをベースに開発できる
+#  Rust + nickel framework + PostgreSQL remplates
 
-## PostgreSQLの起動
+## How to run PostgreSQL 
 ```
 postgres -D /usr/local/var/postgres
 ```
 
-## SPAの参考
+## SPA(Single Page Application) which I refered
 http://www.sitepoint.com/creating-crud-app-minutes-angulars-resource/
 
 # API URL
-## データベースの設定アクセスすると出来る
-http://localhost:6767/setup/
-※最後に`/`忘れずに
+* Create DataBase
+`http://localhost:6767/setup/`
+(caution) don't forget last `/`
+
+## How to Run
+`cargo run`
 
 ## CRUD
 
-### 一覧
+* Movie List
 GET http://localhost:6767/api/movie/
 
-### 一件
-GET http://localhost:6767/api/movie/:id
-
-### 追加
+* Create
 POST http://localhost:6767/api/movie/:id
 
-### 更新
+* Read
+GET http://localhost:6767/api/movie/:id
+
+* Update
 PUT http://localhost:6767/api/movie
 
-## 削除
+* Delete
 DELETE http://localhost:6767/api/movie/:id
 
-## 起動
-cargo run
-
-## これを使ってる
+## Postgres Plugin
 postgres = "0.11"
 sfackler/rust-postgres
