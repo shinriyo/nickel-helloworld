@@ -3,7 +3,7 @@
 extern crate postgres;
 extern crate openssl;
 extern crate hyper;
-
+//extern crate serialize;
 use nickel::{Nickel, Request, Response, HttpRouter, MiddlewareResult, MediaType,
     StaticFilesHandler,JsonBody};
 use nickel::status::StatusCode;
@@ -16,22 +16,15 @@ use std::vec::Vec;
 // json化
 extern crate rustc_serialize;
 use rustc_serialize::{json};
-use rustc_serialize::json::{Json, Parser};
+//use rustc_serialize::json::{Json, Parser};
+
 use std::collections::BTreeMap;
 use hyper::header::Location;
 
 // モデル
 #[derive(RustcDecodable, RustcEncodable)]
 struct Movie {
-    _id: i32,
-    title: String,
-    director: String,
-    releaseYear: i16,
-    genre: String,
-}
-
-#[derive(RustcDecodable, RustcEncodable)]
-struct MovieInsert  {
+    _id: Option<i32>,
     title: String,
     director: String,
     releaseYear: i16,
@@ -50,23 +43,6 @@ fn main() {
     let mut router = Nickel::router();
 
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
-
-    // for what url called logging
-//    router.get("**", middleware! { |request, response|
-//        println!("GET: {}.", request.path_without_query().unwrap());
-//    });
-//
-//    router.post("**", middleware! { |request, response|
-//        println!("POST:{}.", request.path_without_query().unwrap());
-//    });
-//
-//    router.delete("**", middleware! { |request, response|
-//        println!("DELETE:{}.", request.path_without_query().unwrap());
-//    });
-//
-//    router.put("**", middleware! { |request, response|
-//        println!("PUT:{}.", request.path_without_query().unwrap());
-//    });
 
     let shared_connection = Arc::new(Mutex::<Connection>::new(conn));
 
@@ -141,7 +117,7 @@ fn main() {
                 }
             };
 
-            let movie = request.json_as::<MovieInsert>().unwrap();
+        let movie = request.json_as::<Movie>().unwrap();
             match stmt.execute(&[
                 &movie.title.to_string(),
                 &movie.releaseYear,
@@ -155,9 +131,6 @@ fn main() {
                 Err(e) => println!("Inserting movie failed. => {:?}", e),
             };
 
-//            response.set(StatusCode::PermanentRedirect)
-//                .set(Location("/".into()));
-//            ""
             return response.send("");
         });
     }
