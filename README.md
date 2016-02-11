@@ -38,3 +38,12 @@ DELETE http://localhost:6767/api/movie/:id
 ## Postgres Plugin
 postgres = "0.11"
 sfackler/rust-postgres
+
+## License
+
+nickel-helloworld [MIT license](http://www.opensource.org/licenses/MIT)
+
+## Author
+
+* [shinriyo](https://github.com/shinriyo) (Lead developer)
+

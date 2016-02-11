@@ -1,6 +1,6 @@
 # nickel-helloworld
 
-#  自分用のrust言語+nickelフレームワーク+PostgreSQLのテンプレ　これをベースに開発できる
+#  Rust言語+nickelフレームワーク+PostgreSQLのテンプレ　これをベースに開発できる
 
 ## PostgreSQLの起動
 ```
@@ -38,3 +38,12 @@ cargo run
 ## これを使ってる
 postgres = "0.11"
 sfackler/rust-postgres
+
+## License
+
+nickel-helloworldは [MIT license](http://www.opensource.org/licenses/MIT) に基づいてリリースされています。
+
+## 作者
+
+* [shinriyo](https://github.com/shinriyo)
+
