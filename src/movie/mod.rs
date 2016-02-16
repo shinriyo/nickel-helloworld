@@ -18,7 +18,7 @@ struct Movie {
     _id: Option<i32>,
     title: String,
     director: String,
-    releaseYear: i16,
+    release_year: i16,
     genre: String,
 }
 
@@ -26,16 +26,15 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
     // テーブル準備
     let conn = shared_connection.clone();
     router.get("/setup/movie", middleware! { |_, response|
-
-    // also print to stdout
-    return match conn.lock().unwrap().execute("CREATE TABLE Movie (
-            id          SERIAL PRIMARY KEY,
-            title       VARCHAR (50) NOT NULL,
-            releaseYear SMALLINT NOT NULL,
-            director    VARCHAR (18) NOT NULL,
-            genre       VARCHAR (50) NOT NULL
-        )",
-    &[]) {
+        // also print to stdout
+        return match conn.lock().unwrap().execute("CREATE TABLE Movie (
+                id          SERIAL PRIMARY KEY,
+                title       VARCHAR (50) NOT NULL,
+                release_year SMALLINT NOT NULL,
+                director    VARCHAR (18) NOT NULL,
+                genre       VARCHAR (50) NOT NULL
+            )",
+        &[]) {
             // http://www.rust-ci.org/Indiv0/paste/doc/nickel/struct.Response.html
             Ok(_) => return response.send("Movie table was created."),
             // エラー
@@ -44,7 +43,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
     });
 
     // APIs
-    router.get("/", middleware! { |_, mut response|
+    router.get("/movie_app", middleware! { |_, mut response|
         response.set(MediaType::Html);
         return response.send_file("app/movie/views/index.tpl")
     });
@@ -53,14 +52,14 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
     let conn = shared_connection.clone();
     router.get("/api/movies", middleware! { |_, mut response|
         let conn = conn.lock().unwrap();
-        let movies = conn.query("select id, title, releaseYear, director, genre from movie", &[]).unwrap();
+        let movies = conn.query("select id, title, release_year, director, genre from movie", &[]).unwrap();
         let mut v: Vec<Movie> = vec![];
 
         for row in &movies {
             let movie = Movie {
                 _id: row.get(0),
                 title: row.get(1),
-                releaseYear: row.get(2),
+                release_year: row.get(2),
                 director: row.get(3),
                 genre: row.get(4),
             };
@@ -79,7 +78,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
     let conn = shared_connection.clone();
     router.post("/api/movies", middleware! { |request, mut response|
         let conn = conn.lock().unwrap();
-        let stmt = match conn.prepare("insert into movie (title, releaseYear, director, genre)
+        let stmt = match conn.prepare("insert into movie (title, release_year, director, genre)
             values ($1, $2, $3, $4)") {
             Ok(stmt) => stmt,
             Err(e) => {
@@ -90,7 +89,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
         let movie = request.json_as::<Movie>().unwrap();
         match stmt.execute(&[
             &movie.title.to_string(),
-            &movie.releaseYear,
+            &movie.release_year,
             &movie.director.to_string(),
             &movie.genre.to_string()
         ]) {
@@ -109,7 +108,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
     router.get("/api/movies/:id", middleware! { |request, mut response|
         let conn = conn.lock().unwrap();
         let movie = conn.query(
-            "select id, title, releaseYear, director, genre from movie where id = $1",
+            "select id, title, release_year, director, genre from movie where id = $1",
             // param string to int
             &[&request.param("id").unwrap().parse::<i32>().unwrap()]
         ).unwrap();
@@ -119,7 +118,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
             let movie = Movie {
                 _id: row.get(0),
                 title: row.get(1),
-                releaseYear: row.get(2),
+                release_year: row.get(2),
                 director: row.get(3),
                 genre: row.get(4),
             };
@@ -136,7 +135,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
     let conn = shared_connection.clone();
     router.put("/api/movies/:id", middleware! { |request, mut response|
         let conn = conn.lock().unwrap();
-        let stmt = match conn.prepare("update movie set title=$1, releaseYear=$2,
+        let stmt = match conn.prepare("update movie set title=$1, release_year=$2,
             director=$3, genre=$4
             where id = $5") {
             Ok(stmt) => stmt,
@@ -149,7 +148,7 @@ pub fn url(shared_connection: Arc<Mutex<Connection>>, router: &mut Router) {
         let movie = request.json_as::<Movie>().unwrap();
         match stmt.execute(&[
             &movie.title.to_string(),
-            &movie.releaseYear,
+            &movie.release_year,
             &movie.director.to_string(),
             &movie.genre.to_string(),
             &movie._id
