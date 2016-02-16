@@ -12,11 +12,13 @@ http://www.sitepoint.com/creating-crud-app-minutes-angulars-resource/
 
 # API URL
 * Create DataBase
-`http://localhost:6767/setup/`
+`http://localhost:6767/setup/movie`
 (caution) don't forget last `/`
 
 ## How to Run
 `cargo run`
+
+And, later access `http://localhost:6767/movie_app`
 
 ## CRUD
 

@@ -12,8 +12,13 @@ http://www.sitepoint.com/creating-crud-app-minutes-angulars-resource/
 
 # API URL
 ## データベースの設定アクセスすると出来る
-http://localhost:6767/setup/
+http://localhost:6767/setup/movie
 ※最後に`/`忘れずに
+
+## 実行方法
+`cargo run`
+
+その後、`http://localhost:6767/movie_app`にアクセス
 
 ## CRUD
 
