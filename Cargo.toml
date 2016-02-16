@@ -5,10 +5,7 @@ authors = ["shinriyo"]
 
 [dependencies]
 nickel = "*"
-# https://github.com/sfackler/rust-postgres/
-postgres = "0.11"
+postgres = "0.11" # https://github.com/sfackler/rust-postgres/
 openssl = "*"
-# rustc-serialize = "0.3"
 rustc-serialize = "*"
-
 hyper = "*"

@@ -25,6 +25,6 @@ fn main() {
     let conn = Connection::connect("postgres://postgres@localhost", SslMode::None).unwrap();
     let shared_connection = Arc::new(Mutex::new(conn));
     movie::url(shared_connection.clone(), &mut router);
-
+    server.utilize(router);
     server.listen("localhost:6767");
 }
